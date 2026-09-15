@@ -1,0 +1,38 @@
+{
+  "channels": {
+    "trade": {
+      "generator": "trade",
+      "interval_ms": 1500,
+      "config": {
+        "volatility": 0.002,
+        "maxVolume": 2.0
+      }
+    },
+    "book": {
+      "generator": "order_book",
+      "interval_ms": 1000,
+      "config": {
+        "levels": 100,
+        "spread": 0.5,
+        "maxQuantity": 5.0
+      }
+    }
+  },
+  "symbol_defaults": {
+    "basePrice": 42000
+  },
+  "symbols": {
+    "BTC/DEMO1": {
+      "basePrice": 42000
+    },
+    "BTC/DEMO2": {
+      "basePrice": 42000
+    },
+    "ETH/DEMO1": {
+      "basePrice": 2500
+    },
+    "ETH/DEMO2": {
+      "basePrice": 2500
+    }
+  }
+}

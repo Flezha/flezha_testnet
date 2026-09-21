@@ -94,7 +94,7 @@ out < {"total":3}
 What arrives is whatever the websocket sink was configured to send. With no
 `sink_template` the operative's payload goes out on its own, which is the line
 above. A template composes the frame instead: `{{payload}}` is required, and
-`{{req_id}}`, `{{entity}}` and `{{seq}}` are available.
+`{{req_id}}`, `{{cell}}` and `{{seq}}` are available.
 
 A websocket text frame has no header slot, so a template is the only way the
 identity stamps reach the other end. To see them here, give the sink one:
@@ -102,12 +102,12 @@ identity stamps reach the other end. To see them here, give the sink one:
 ```
 --plugins '[{"id":"out","provider":"operative_websocket","opts":{
   "uri":"ws://localhost:4500/out",
-  "sink_template":"{\"payload\":{{payload}},\"entity\":\"{{entity}}\",\"seq\":{{seq}}}"
+  "sink_template":"{\"payload\":{{payload}},\"cell\":\"{{cell}}\",\"seq\":{{seq}}}"
 },"hooks":[["on_output",{}]]}]'
 ```
 
 ```
-out < {"payload":{"total":3},"entity":"order-7","seq":41}
+out < {"payload":{"total":3},"cell":"order-7","seq":41}
 ```
 
 ## Subscriptions

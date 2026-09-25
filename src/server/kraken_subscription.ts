@@ -1,5 +1,5 @@
 /**
- * Kraken WebSocket **v2** subscription frames, as the `operative_websocket`
+ * Kraken WebSocket **v2** subscription frames, as the `operator_websocket`
  * subscription source sends them:
  *
  *   {"method":"subscribe","params":{"channel":"trade","symbol":["BTC/USD"]},"req_id":7}

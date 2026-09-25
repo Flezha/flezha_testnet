@@ -2,7 +2,7 @@
  * What the path of an upgrade request means.
  *
  * The testnet feeds input sockets and never feeds output ones: a sink attached
- * to `/out` must not receive the manual traffic the operator is typing, or the
+ * to `/out` must not receive the manual traffic the user is typing, or the
  * loop is fed its own output. One classifier so the broadcast rule and the
  * `/out` handling cannot drift apart.
  */

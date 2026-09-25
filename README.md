@@ -3,7 +3,7 @@
 A fake exchange for [Flezha](https://github.com/flezha/flezha). It speaks the
 Kraken v2 WebSocket protocol, streams generated trades and order books for any
 symbol you subscribe to, and prints what a Flezha sink sends back. Flezha's own
-tests use it, and so do its guides, so an operative can be watched working on
+tests use it, and so do its guides, so an operator can be watched working on
 market data without an exchange account.
 
 ## Run it with Docker
@@ -41,8 +41,8 @@ npm run start
 
 Run the testnet in a terminal and it reads typed lines, sending each one to
 every connected socket. This is the hand-driven half of an end-to-end test: the
-`operative_websocket` source connects to the testnet as a client, so what you
-type here is what the operative ingests.
+`operator_websocket` source connects to the testnet as a client, so what you
+type here is what the operator ingests.
 
 ```
 $ npm run start
@@ -82,7 +82,7 @@ stdin is the shutdown channel there, not a keyboard. Force it either way with
 ## Output
 
 A socket connecting on `/out` is treated as a Flezha sink reporting what an
-operative emitted. Its frames are printed verbatim and nothing is sent back: no
+operator emitted. Its frames are printed verbatim and nothing is sent back: no
 acks, no generators, and none of the manual input above. That is what lets one
 testnet process be both ends of a hand-driven run.
 
@@ -92,7 +92,7 @@ out < {"total":3}
 ```
 
 What arrives is whatever the websocket sink was configured to send. With no
-`sink_template` the operative's payload goes out on its own, which is the line
+`sink_template` the operator's payload goes out on its own, which is the line
 above. A template composes the frame instead: `{{payload}}` is required, and
 `{{req_id}}`, `{{cell}}` and `{{seq}}` are available.
 
@@ -100,7 +100,7 @@ A websocket text frame has no header slot, so a template is the only way the
 identity stamps reach the other end. To see them here, give the sink one:
 
 ```
---plugins '[{"id":"out","provider":"operative_websocket","opts":{
+--plugins '[{"id":"out","provider":"operator_websocket","opts":{
   "uri":"ws://localhost:4500/out",
   "sink_template":"{\"payload\":{{payload}},\"cell\":\"{{cell}}\",\"seq\":{{seq}}}"
 },"hooks":[["on_output",{}]]}]'
@@ -114,7 +114,7 @@ out < {"payload":{"total":3},"cell":"order-7","seq":41}
 
 The server speaks two subscription dialects on the same socket.
 
-**Kraken v2** — what the `operative_websocket` subscription source sends:
+**Kraken v2** — what the `operator_websocket` subscription source sends:
 
 ```json
 {"method":"subscribe","params":{"channel":"trade","symbol":["BTC/DEMO1"]},"req_id":7}
@@ -122,7 +122,7 @@ The server speaks two subscription dialects on the same socket.
 
 Each request is acked once per symbol, echoing its `req_id` (the source commits
 its applied set on that echo). Generators run **per connection per symbol**, so
-a partitioned operative's members each receive only what they subscribed.
+a partitioned operator's members each receive only what they subscribed.
 
 **Legacy** — `{"event_type":"subscribe","event_data":{"generators":[…]}}`,
 which carries its own intervals and generator config, unchanged.

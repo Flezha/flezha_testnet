@@ -3,7 +3,7 @@
  * sockets it is already feeding.
  *
  * `SubscriptionRouter` answers what a client subscribed to; this originates
- * traffic the operator chose, on whatever connections are open. The two share
+ * traffic the user chose, on whatever connections are open. The two share
  * the `Timers` seam and nothing else.
  *
  * Templates use the `{{...}}` spelling the websocket subscription source

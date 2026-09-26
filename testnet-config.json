@@ -33,6 +33,21 @@
     },
     "ETH/DEMO2": {
       "basePrice": 2500
+    },
+    "EUR/USD": {
+      "basePrice": 1.085,
+      "volatility": 0.012,
+      "decimals": 5
+    },
+    "GBP/USD": {
+      "basePrice": 1.34,
+      "volatility": 0.012,
+      "decimals": 5
+    },
+    "USD/JPY": {
+      "basePrice": 149.5,
+      "volatility": 0.012,
+      "decimals": 3
     }
   }
 }

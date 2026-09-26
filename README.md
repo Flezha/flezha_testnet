@@ -146,12 +146,17 @@ tuning is server-side:
     "book":  { "generator": "order_book", "interval_ms": 1000, "config": { "levels": 100 } }
   },
   "symbol_defaults": { "basePrice": 42000 },
-  "symbols": { "ETH/DEMO1": { "basePrice": 2500 } }
+  "symbols": {
+    "ETH/DEMO1": { "basePrice": 2500 },
+    "EUR/USD": { "basePrice": 1.085, "volatility": 0.012, "decimals": 5 }
+  }
 }
 ```
 
-A symbol with no entry streams on `symbol_defaults`, so subscribing a new pair
-needs no server restart.
+A symbol's entry can set any of the generator's own options too: `volatility`,
+the largest price move per tick as a fraction, and `decimals`, the places a
+price is rounded to (2 unless set). A symbol with no entry streams on
+`symbol_defaults`, so subscribing a new pair needs no server restart.
 
 ## Generators
 

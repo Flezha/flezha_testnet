@@ -12,6 +12,7 @@
  *   basePrice: number      — starting price (default: 42000)
  *   volatility: number     — max price change per tick as fraction (default: 0.002)
  *   maxVolume: number      — max trade volume (default: 2.0)
+ *   decimals: number       — decimal places a price is rounded to (default: 2)
  */
 
 // Per-pair state survives across generate() calls
@@ -37,6 +38,7 @@ function generate(config) {
   const pairs = config.pairs || ['BTC/DEMO1'];
   const volatility = config.volatility || 0.002;
   const maxVolume = config.maxVolume || 2.0;
+  const decimals = config.decimals ?? 2;
 
   // Pick a random pair for this tick
   const pair = pairs[Math.floor(Math.random() * pairs.length)];
@@ -59,7 +61,7 @@ function generate(config) {
     data.push({
       symbol: pair,
       side: Math.random() > 0.5 ? 'buy' : 'sell',
-      price: Number(tradePrice.toFixed(2)),
+      price: Number(tradePrice.toFixed(decimals)),
       qty: Number(volume.toFixed(8)),
       ord_type: Math.random() > 0.3 ? 'market' : 'limit',
       trade_id: tradeId,
@@ -78,5 +80,6 @@ module.exports = {
     basePrice: 42000,
     volatility: 0.002,
     maxVolume: 2.0,
+    decimals: 2,
   },
 };

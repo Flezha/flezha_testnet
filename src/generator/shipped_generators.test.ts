@@ -46,3 +46,20 @@ test('the shipped order book generator streams a Kraken v2 snapshot for the subs
   assert.equal(frame.data[0].symbol, 'BTC/DEMO1');
   assert.ok(frame.data[0].bids.length > 0 && frame.data[0].asks.length > 0);
 });
+
+// fails when: every price is rounded to two decimals, so a currency pair quoted
+// to five moves in steps of a whole cent and a 2 % rule never sees it rise.
+test('the trade generator rounds a price to the decimals its symbol is tuned for', () => {
+  const generators = loadGenerators(path.resolve('generators'));
+  const trade = generators.get('trade')!;
+  const frame = JSON.parse(trade.generate({ pairs: ['EUR/USD'], basePrice: 1.085, decimals: 5 }));
+
+  for (const t of frame.data) {
+    assert.ok(Math.abs(t.price - 1.085) < 0.01, `price ${t.price} strayed from its base`);
+    assert.equal(t.price, Number(t.price.toFixed(5)));
+  }
+  assert.ok(
+    frame.data.some((t: { price: number }) => t.price !== Number(t.price.toFixed(2))),
+    'every price was still rounded to two decimals'
+  );
+});

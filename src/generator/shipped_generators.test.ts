@@ -24,9 +24,9 @@ function framesFor(channel: string): Record<string, any>[] {
   return sent.map((s) => JSON.parse(s)).filter((f) => f.channel === channel && f.data);
 }
 
-// fails when: the repository ships no generators, so a Kraken subscribe is
+// fails when: the repository ships no generators, so a v2 subscribe is
 // acked and then streams nothing.
-test('the shipped trade generator streams Kraken v2 trades for the subscribed symbol', () => {
+test('the shipped trade generator streams v2 trades for the subscribed symbol', () => {
   const [frame] = framesFor('trade');
 
   assert.ok(frame, 'no trade frame after subscribing');
@@ -38,7 +38,7 @@ test('the shipped trade generator streams Kraken v2 trades for the subscribed sy
   }
 });
 
-test('the shipped order book generator streams a Kraken v2 snapshot for the subscribed symbol', () => {
+test('the shipped order book generator streams a v2 snapshot for the subscribed symbol', () => {
   const [frame] = framesFor('book');
 
   assert.ok(frame, 'no book frame after subscribing');

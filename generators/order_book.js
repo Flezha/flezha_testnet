@@ -1,8 +1,7 @@
 /**
- * Kraken-format order book snapshot generator for Flezha testnet.
+ * Order book snapshot generator for Flezha testnet.
  *
- * Generates order book snapshots in the Kraken WebSocket **v2** book format, as
- * `wss://ws.kraken.com/v2` sends them:
+ * Generates order book snapshots in the testnet's WebSocket **v2** book format:
  *   {"channel":"book","type":"snapshot","data":[
  *     {"symbol":"BTC/DEMO1","bids":[{"price":41999.75,"qty":1.5}],
  *      "asks":[{"price":42000.25,"qty":1.2}],"checksum":123456789}]}

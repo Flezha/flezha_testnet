@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { ackFrames, parseSubscriptionRequest } from './kraken_subscription';
+import { ackFrames, parseSubscriptionRequest } from './exchange_subscription';
 
 // fails when: the frame the WS subscription source actually sends stops
 // decoding — the testnet would then generate nothing and every dev journey

@@ -1,7 +1,7 @@
 # Flezha Testnet
 
-A fake exchange for [Flezha](https://github.com/flezha/flezha). It speaks the
-Kraken v2 WebSocket protocol, streams generated trades and order books for any
+A fake exchange for [Flezha](https://github.com/flezha/flezha). It speaks a
+WebSocket v2 exchange protocol, streams generated trades and order books for any
 symbol you subscribe to, and prints what a Flezha sink sends back. Flezha's own
 tests use it, and so do its guides, so an operator can be watched working on
 market data without an exchange account.
@@ -114,7 +114,7 @@ out < {"payload":{"total":3},"cell":"order-7","seq":41}
 
 The server speaks two subscription dialects on the same socket.
 
-**Kraken v2** — what the `operator_websocket` subscription source sends:
+**v2** — what the `operator_websocket` subscription source sends:
 
 ```json
 {"method":"subscribe","params":{"channel":"trade","symbol":["BTC/DEMO1"]},"req_id":7}
@@ -133,7 +133,7 @@ which carries its own intervals and generator config, unchanged.
 | --- | --- |
 | `FLEZHA_TESTNET_WS_PORT` | Listen port (default `4500`) |
 | `GENERATORS_PATH` | Directory of generator modules (default `./generators`) |
-| `FLEZHA_TESTNET_CONFIG` | JSON file mapping Kraken channels to generators, plus per-symbol tuning (default `testnet-config.json`) |
+| `FLEZHA_TESTNET_CONFIG` | JSON file mapping subscription channels to generators, plus per-symbol tuning (default `testnet-config.json`) |
 | `FLEZHA_TESTNET_MANUAL` | `1` forces manual input on, `0` off; unset follows whether stdin is a terminal |
 
 A v2 subscribe carries no room for a base price or a tick interval, so that
@@ -160,7 +160,7 @@ price is rounded to (2 unless set). A symbol with no entry streams on
 
 ## Generators
 
-`generators/` holds the two generators the Kraken channels use: `trade.js` for
+`generators/` holds the two generators the subscription channels use: `trade.js` for
 `trade` and `order_book.js` for `book`. Each module exports a `name`, a
 `generate(config)` that returns one frame as a string, and a `defaultConfig`
 (`src/generator/generator_contract.ts`). Any `.js` file placed in the directory

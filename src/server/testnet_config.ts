@@ -2,7 +2,7 @@
  * Server-side generator tuning, read once at start from the JSON file named
  * by `FLEZHA_TESTNET_CONFIG`.
  *
- * With Kraken-v2 subscriptions the client sends only a channel and a symbol
+ * With v2 subscriptions the client sends only a channel and a symbol
  * list — there is no room in the frame for a base price or a tick interval,
  * and inventing one would stop the dev feed being shaped like the real
  * exchange. So the tuning lives here instead:
@@ -24,7 +24,7 @@
 
 import * as fs from 'fs';
 
-/** Per-Kraken-channel wiring: which generator serves it, and how fast. */
+/** Per-channel wiring: which generator serves it, and how fast. */
 export interface ChannelConfig {
   /** Loaded generator's `name` (e.g. `trade`, `order_book`). */
   generator: string;

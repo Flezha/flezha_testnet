@@ -1,8 +1,7 @@
 /**
- * Kraken-format trade message generator for Flezha testnet.
+ * Trade message generator for Flezha testnet.
  *
- * Generates trade messages in the Kraken WebSocket **v2** trade format, as
- * `wss://ws.kraken.com/v2` sends them:
+ * Generates trade messages in the testnet's WebSocket **v2** trade format:
  *   {"channel":"trade","type":"update","data":[
  *     {"symbol":"BTC/DEMO1","side":"buy","price":42000.12,"qty":0.5,
  *      "ord_type":"market","trade_id":123,"timestamp":"2026-08-07T12:34:56.123456Z"}]}
@@ -29,7 +28,7 @@ function getState(pair, config) {
   return pairState[pair];
 }
 
-// Kraken v2 stamps every trade RFC 3339 in UTC with microsecond precision.
+// The v2 format stamps every trade RFC 3339 in UTC with microsecond precision.
 function rfc3339(nowMs) {
   return `${new Date(nowMs).toISOString().replace('Z', '')}000Z`;
 }

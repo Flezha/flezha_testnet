@@ -1,5 +1,5 @@
 /**
- * Kraken WebSocket **v2** subscription frames, as the `operator_websocket`
+ * WebSocket **v2** subscription frames, as the `operator_websocket`
  * subscription source sends them:
  *
  *   {"method":"subscribe","params":{"channel":"trade","symbol":["BTC/USD"]},"req_id":7}
@@ -19,7 +19,7 @@ export interface SubscriptionRequest {
 }
 
 /**
- * Decode a Kraken-v2 subscription frame, or `null` for anything else (a
+ * Decode a v2 subscription frame, or `null` for anything else (a
  * legacy `event_type` payload, a ping, malformed JSON). Unknown fields are
  * ignored — `depth` and friends are the caller's business, not the router's.
  */
@@ -40,7 +40,7 @@ export function parseSubscriptionRequest(message: string): SubscriptionRequest |
   const channel = params.channel;
   if (typeof channel !== 'string' || channel.length === 0) return null;
 
-  // Kraken accepts a bare string as well as an array; both spellings reach us.
+  // A bare string is accepted as well as an array; both spellings reach us.
   const rawSymbols = params.symbol;
   const symbols = (Array.isArray(rawSymbols) ? rawSymbols : [rawSymbols]).filter(
     (s): s is string => typeof s === 'string' && s.length > 0
@@ -52,7 +52,7 @@ export function parseSubscriptionRequest(message: string): SubscriptionRequest |
 }
 
 /**
- * Kraken answers one ack per symbol, each echoing the request's `req_id`.
+ * The server answers one ack per symbol, each echoing the request's `req_id`.
  * `nowIso` is injected so a test can assert the whole frame.
  */
 export function ackFrames(request: SubscriptionRequest, nowIso: string): string[] {

@@ -99,7 +99,7 @@ export default class ServerImpl implements ServerContract, InputSockets {
       return;
     }
 
-    // Kraken-v2 subscriptions first: they are what the reconciling WS source
+    // v2 subscriptions first: they are what the reconciling WS source
     // sends, and a partitioned member's applied set is exactly these frames.
     if (connection?.router.handle(raw)) return;
 

@@ -1,5 +1,5 @@
 /**
- * Per-connection Kraken-v2 subscription state: which symbols this socket has
+ * Per-connection v2 subscription state: which symbols this socket has
  * asked for on which channel, and the generator timer serving each one.
  *
  * One router per connection is what makes the testnet usable by a partitioned
@@ -10,7 +10,7 @@
  */
 
 import { Generator } from '../generator/generator_contract';
-import { ackFrames, parseSubscriptionRequest } from './kraken_subscription';
+import { ackFrames, parseSubscriptionRequest } from './exchange_subscription';
 import { generatorConfigFor, intervalFor, TestnetConfig } from './testnet_config';
 import { REAL_TIMERS, Timers } from '../util/timers';
 
@@ -31,7 +31,7 @@ export class SubscriptionRouter {
   ) {}
 
   /**
-   * Apply a raw inbound frame. Returns `false` when it is not a Kraken-v2
+   * Apply a raw inbound frame. Returns `false` when it is not a v2
    * subscription frame, so the caller can fall through to the legacy
    * `event_type` handler.
    */

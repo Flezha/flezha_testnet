@@ -1,10 +1,11 @@
 import WebSocket from 'ws';
-import ServerContract, { ConnectedSocket, InputSockets } from './server_contract';
+import ServerContract, { ConnectedSocket, InputSockets, MarketControl } from './server_contract';
 import { ConnectionRole, requestPath, roleFor } from './connection_paths';
 import { Generator, GeneratorSubscription } from '../generator/generator_contract';
 import { loadGenerators } from '../generator/generator_loader';
 import { loadTestnetConfig, TestnetConfig } from './testnet_config';
 import { SubscriptionRouter } from './subscription_router';
+import { Market } from './market';
 
 type Payload = {
   event_type: string;
@@ -20,10 +21,11 @@ type SubscriptionEvent = {
   generators?: GeneratorSubscription[];
 };
 
-export default class ServerImpl implements ServerContract, InputSockets {
+export default class ServerImpl implements ServerContract, InputSockets, MarketControl {
   private port: number;
   private generators: Map<string, Generator>;
   private config: TestnetConfig;
+  private readonly market = new Market();
   /** Per-connection state, so a disconnect stops exactly that socket's timers. */
   private connections: Map<
     WebSocket,
@@ -45,7 +47,12 @@ export default class ServerImpl implements ServerContract, InputSockets {
       const path = requestPath(request.url);
       console.log(`Testnet client connected on ${path}`);
       this.connections.set(ws, {
-        router: new SubscriptionRouter(this.generators, this.config, (message) => ws.send(message)),
+        router: new SubscriptionRouter(
+          this.generators,
+          this.config,
+          (message) => ws.send(message),
+          this.market
+        ),
         legacy: [],
         path,
         role: roleFor(path),
@@ -70,6 +77,24 @@ export default class ServerImpl implements ServerContract, InputSockets {
       recipients += 1;
     });
     return recipients;
+  }
+
+  /** @see MarketControl.pause */
+  public pause(): void {
+    this.market.pause();
+  }
+
+  /** @see MarketControl.resume */
+  public resume(): void {
+    this.market.resume();
+  }
+
+  /** @see MarketControl.jump */
+  public jump(symbol: string, percent: number): number {
+    this.market.jump(symbol, percent);
+    return [...this.connections.values()].filter(({ router }) =>
+      router.activeSymbols('trade').includes(symbol)
+    ).length;
   }
 
   /** @see InputSockets.connected */
@@ -170,6 +195,7 @@ export default class ServerImpl implements ServerContract, InputSockets {
 
       // Schedule periodic generation
       const intervalId = setInterval(() => {
+        if (this.market.paused()) return;
         try {
           const msg = generator.generate(config);
           ws.send(msg);

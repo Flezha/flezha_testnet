@@ -6,6 +6,7 @@ import { loadGenerators } from './generator_loader';
 import { SubscriptionRouter } from '../server/subscription_router';
 import { DEFAULT_CONFIG } from '../server/testnet_config';
 import { FakeTimers } from '../util/fake_timers.test-support';
+import { STEADY_MARKET } from '../server/market';
 
 function framesFor(channel: string): Record<string, any>[] {
   const sent: string[] = [];
@@ -13,6 +14,7 @@ function framesFor(channel: string): Record<string, any>[] {
     loadGenerators(path.resolve('generators')),
     DEFAULT_CONFIG,
     (m) => sent.push(m),
+    STEADY_MARKET,
     new FakeTimers(),
     () => '2026-09-15T00:00:00.000Z'
   );
@@ -62,4 +64,19 @@ test('the trade generator rounds a price to the decimals its symbol is tuned for
     frame.data.some((t: { price: number }) => t.price !== Number(t.price.toFixed(2))),
     'every price was still rounded to two decimals'
   );
+});
+
+// fails when: the trade generator ignores the server's jump, or keeps the
+// price up after it, so /jump starts a run of orders instead of exactly one.
+test('a jump is one market trade at the moved price, and the price carries on from before it', () => {
+  const trade = loadGenerators(path.resolve('generators')).get('trade')!;
+  const config = { pairs: ['JUMP/TEST'], basePrice: 100, decimals: 5, volatility: 0.001 };
+  const before = JSON.parse(trade.generate(config)).data[0].price;
+  const spike = JSON.parse(trade.generate({ ...config, jumpPercent: 12 })).data;
+  const after = JSON.parse(trade.generate(config)).data[0].price;
+
+  assert.equal(spike.length, 1);
+  assert.equal(spike[0].ord_type, 'market');
+  assert.ok(Math.abs(spike[0].price / before - 1.12) < 0.003, `spike at ${spike[0].price}, not 12% above ${before}`);
+  assert.ok(Math.abs(after / before - 1) < 0.003, `price stayed up at ${after} after the spike`);
 });

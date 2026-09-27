@@ -5,14 +5,15 @@ import { Generator } from '../generator/generator_contract';
 import { SubscriptionRouter } from './subscription_router';
 import { TestnetConfig } from './testnet_config';
 import { FakeTimers } from '../util/fake_timers.test-support';
+import { Market, MarketState, STEADY_MARKET } from './market';
 
 const tradeGenerator: Generator = {
   name: 'trade',
-  generate: (config: { pairs: string[]; basePrice?: number }) =>
+  generate: (config: { pairs: string[]; basePrice?: number; jumpPercent?: number }) =>
     JSON.stringify({
       channel: 'trade',
       type: 'update',
-      data: [{ symbol: config.pairs[0], price: config.basePrice ?? 0 }],
+      data: [{ symbol: config.pairs[0], price: config.basePrice ?? 0, jump: config.jumpPercent }],
     }),
   defaultConfig: {},
 };
@@ -26,7 +27,7 @@ const CONFIG: TestnetConfig = {
   symbols: { 'ETH/DEMO1': { basePrice: 2500 }, 'BENCH/USD': { interval_ms: 25 } },
 };
 
-function router(): {
+function router(market: MarketState = STEADY_MARKET): {
   router: SubscriptionRouter;
   sent: string[];
   timers: FakeTimers;
@@ -38,6 +39,7 @@ function router(): {
       new Map([[tradeGenerator.name, tradeGenerator]]),
       CONFIG,
       (m) => sent.push(m),
+      market,
       timers,
       () => '2026-08-16T00:00:00.000Z'
     ),
@@ -174,4 +176,44 @@ test('an unknown channel starts nothing and is not acked', () => {
   );
   assert.equal(timers.active.size, 0);
   assert.equal(sent.length, 0);
+});
+
+const SUBSCRIBE_BTC = '{"method":"subscribe","params":{"channel":"trade","symbol":["BTC/DEMO1"]},"req_id":1}';
+
+// fails when: /pause stops nothing, so a guide cannot freeze the feed to
+// compare an operator's state before and after a crash.
+test('a paused market generates nothing, and resumes on the next tick', () => {
+  const market = new Market();
+  market.pause();
+  const { router: r, sent, timers } = router(market);
+  r.handle(SUBSCRIBE_BTC);
+  timers.tick(3);
+  assert.equal(dataFrames(sent).length, 0);
+  assert.equal(sent.length, 1, 'the subscription is still acked while paused');
+
+  market.resume();
+  timers.tick(1);
+  assert.equal(dataFrames(sent).length, 1);
+});
+
+// fails when: a jump never reaches the generator, or reaches every tick after
+// it, so the one large move a guide asks for is lost or repeats forever.
+test('a jump reaches the next trade tick of its symbol, once', () => {
+  const market = new Market();
+  const { router: r, sent, timers } = router(market);
+  r.handle(SUBSCRIBE_BTC);
+  market.jump('BTC/DEMO1', 12);
+  timers.tick(2);
+
+  const jumps = dataFrames(sent).map((f) => (f.data as { jump?: number }[])[0].jump);
+  assert.deepEqual(jumps, [undefined, 12, undefined]);
+});
+
+test('a jump is taken on the trade channel only, and a later one replaces it', () => {
+  const market = new Market();
+  market.jump('EUR/USD', 5);
+  market.jump('EUR/USD', 12);
+  assert.equal(market.takeJump('book', 'EUR/USD'), undefined);
+  assert.equal(market.takeJump('trade', 'EUR/USD'), 12);
+  assert.equal(market.takeJump('trade', 'EUR/USD'), undefined);
 });

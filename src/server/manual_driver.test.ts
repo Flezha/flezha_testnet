@@ -8,7 +8,7 @@ import {
   parseDuration,
   render,
 } from './manual_driver';
-import { ConnectedSocket, InputSockets } from './server_contract';
+import { ConnectedSocket, InputSockets, MarketControl } from './server_contract';
 import { FakeTimers } from '../util/fake_timers.test-support';
 import { Timers } from '../util/timers';
 
@@ -18,20 +18,28 @@ function driver(peers: ConnectedSocket[] = []): {
   printed: string[];
   timers: FakeTimers;
   recipients: { count: number };
+  market: string[];
 } {
   const sent: string[] = [];
   const printed: string[] = [];
+  const market: string[] = [];
   const timers = new FakeTimers();
   const recipients = { count: 1 };
-  const sockets: InputSockets = {
+  const sockets: InputSockets & MarketControl = {
     broadcast: (message) => {
       sent.push(message);
       return recipients.count;
     },
     connected: () => peers,
+    pause: () => void market.push('pause'),
+    resume: () => void market.push('resume'),
+    jump: (symbol, percent) => {
+      market.push(`jump ${symbol} ${percent}`);
+      return recipients.count;
+    },
   };
   const instance = new ManualDriver(sockets, (line) => printed.push(line), timers, () => 'TS');
-  return { driver: instance, sent, printed, timers, recipients };
+  return { driver: instance, sent, printed, timers, recipients, market };
 }
 
 test('parseDuration reads every suffix and refuses the rest', () => {
@@ -181,6 +189,9 @@ test('a stopped bulk sends nothing even if its timer fires again', () => {
         return 1;
       },
       connected: () => [],
+      pause: () => undefined,
+      resume: () => undefined,
+      jump: () => 0,
     },
     () => undefined,
     leaky
@@ -218,4 +229,39 @@ test('a blank line does nothing at all', () => {
   d.handleLine('   ');
   assert.deepEqual(sent, []);
   assert.deepEqual(printed, []);
+});
+
+test('parseCommand reads the market controls', () => {
+  assert.deepEqual(parseCommand('/pause'), { kind: 'pause' });
+  assert.deepEqual(parseCommand('/resume'), { kind: 'resume' });
+  assert.deepEqual(parseCommand('/jump EUR/USD 12'), { kind: 'jump', symbol: 'EUR/USD', percent: 12 });
+  assert.deepEqual(parseCommand('/jump EUR/USD -2.5'), {
+    kind: 'jump',
+    symbol: 'EUR/USD',
+    percent: -2.5,
+  });
+});
+
+test('parseCommand refuses a jump without a usable percent', () => {
+  assert.match((parseCommand('/jump EUR/USD') as { reason: string }).reason, /usage/);
+  assert.match((parseCommand('/jump EUR/USD 0') as { reason: string }).reason, /non-zero/);
+  assert.match((parseCommand('/jump EUR/USD -100') as { reason: string }).reason, /above -100/);
+  assert.match((parseCommand('/jump EUR/USD ten') as { reason: string }).reason, /non-zero/);
+});
+
+test('/pause, /resume and /jump steer the market and say what they did', () => {
+  const { driver: d, printed, market, recipients } = driver();
+  d.handleLine('/pause');
+  d.handleLine('/jump EUR/USD 12');
+  recipients.count = 0;
+  d.handleLine('/jump GBP/USD 5');
+  d.handleLine('/resume');
+
+  assert.deepEqual(market, ['pause', 'jump EUR/USD 12', 'jump GBP/USD 5', 'resume']);
+  assert.deepEqual(printed, [
+    'market paused: nothing is generated until /resume',
+    'EUR/USD moves 12% on its next trade (1 socket(s) subscribed)',
+    'GBP/USD moves 5% on its next trade, once a socket subscribes to its trades',
+    'market resumed',
+  ]);
 });

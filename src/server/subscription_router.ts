@@ -13,6 +13,7 @@ import { Generator } from '../generator/generator_contract';
 import { ackFrames, parseSubscriptionRequest } from './exchange_subscription';
 import { generatorConfigFor, intervalFor, TestnetConfig } from './testnet_config';
 import { REAL_TIMERS, Timers } from '../util/timers';
+import { MarketState, STEADY_MARKET } from './market';
 
 export type Send = (message: string) => void;
 
@@ -26,6 +27,7 @@ export class SubscriptionRouter {
     private readonly generators: Map<string, Generator>,
     private readonly config: TestnetConfig,
     private readonly send: Send,
+    private readonly market: MarketState = STEADY_MARKET,
     private readonly timers: Timers = REAL_TIMERS,
     private readonly now: () => string = () => new Date().toISOString()
   ) {}
@@ -99,8 +101,11 @@ export class SubscriptionRouter {
     const generatorConfig = generatorConfigFor(this.config, channel, symbol);
     const interval = intervalFor(this.config, channel, symbol);
     const tick = () => {
+      if (this.market.paused()) return;
+      const jumpPercent = this.market.takeJump(channelName, symbol);
+      const config = jumpPercent === undefined ? generatorConfig : { ...generatorConfig, jumpPercent };
       try {
-        this.send(generator.generate(generatorConfig));
+        this.send(generator.generate(config));
       } catch (error) {
         console.error(`Generator "${channel.generator}" error for ${symbol}:`, error);
       }

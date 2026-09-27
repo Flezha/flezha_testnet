@@ -60,7 +60,17 @@ bulk: 500 message(s), one every 60ms
 | `/bulk <count> <duration> <text>` | `<count>` copies spread evenly over `<duration>` |
 | `/stop` | cancel a running bulk |
 | `/peers` | list the connected sockets and their paths |
+| `/pause` | stop generating market data on every socket; typed lines still send |
+| `/resume` | generate it again |
+| `/jump <symbol> <percent>` | send one market trade for `<symbol>` at `<percent>` away from its price; the price then carries on from where it was |
 | `/help` | the command list |
+
+`/pause` and `/resume` let a guide freeze the feed while it compares an
+operator's state before and after a crash. A jump goes through the generator
+and the subscription like any other trade, so only the sockets subscribed to
+that symbol see it, and a partitioned operator receives it on the one member
+that owns the symbol. It is a single spike rather than a new level, so it
+triggers a rule once instead of on every trade after it.
 
 Durations are `250ms`, `30s` or `2m`; a bare number is milliseconds. In a bulk
 template `{{n}}` becomes the 1-based index and `{{ts}}` an ISO timestamp, which

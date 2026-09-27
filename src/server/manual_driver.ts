@@ -11,7 +11,7 @@
  */
 
 import { REAL_TIMERS, Timers } from '../util/timers';
-import { InputSockets } from './server_contract';
+import { InputSockets, MarketControl } from './server_contract';
 
 export type Command =
   | { kind: 'blank' }
@@ -19,6 +19,9 @@ export type Command =
   | { kind: 'bulk'; count: number; durationMs: number; template: string }
   | { kind: 'stop' }
   | { kind: 'peers' }
+  | { kind: 'pause' }
+  | { kind: 'resume' }
+  | { kind: 'jump'; symbol: string; percent: number }
   | { kind: 'help' }
   | { kind: 'error'; reason: string };
 
@@ -29,6 +32,9 @@ const HELP = [
   '  /bulk <count> <duration> <text>   send <count> copies spread over <duration>',
   '  /stop                             cancel a running bulk',
   '  /peers                            list connected sockets',
+  '  /pause                            stop generating market data',
+  '  /resume                           generate it again',
+  '  /jump <symbol> <percent>          move a symbol\'s price by <percent> on its next trade',
   '  /help                             this text',
   '',
   'Durations are 250ms, 30s or 2m; a bare number is milliseconds.',
@@ -36,6 +42,7 @@ const HELP = [
 ].join('\n');
 
 const BULK = /^\/bulk\s+(\S+)\s+(\S+)\s+([\s\S]+)$/;
+const JUMP = /^\/jump\s+(\S+)\s+(\S+)$/;
 
 /**
  * Whether typed lines are read. Manual input is for a person at a terminal:
@@ -79,6 +86,23 @@ export function parseCommand(line: string): Command {
       return { kind: 'peers' };
     case '/stop':
       return { kind: 'stop' };
+    case '/pause':
+      return { kind: 'pause' };
+    case '/resume':
+      return { kind: 'resume' };
+    case '/jump': {
+      const parts = JUMP.exec(trimmed);
+      if (!parts) return { kind: 'error', reason: 'usage: /jump <symbol> <percent>' };
+      const [, symbol, rawPercent] = parts;
+      const percent = /^-?\d+(\.\d+)?$/.test(rawPercent) ? Number(rawPercent) : NaN;
+      if (!(percent > -100) || percent === 0) {
+        return {
+          kind: 'error',
+          reason: `percent must be a non-zero number above -100, got "${rawPercent}"`,
+        };
+      }
+      return { kind: 'jump', symbol, percent };
+    }
     case '/bulk': {
       const parts = BULK.exec(trimmed);
       if (!parts) {
@@ -112,7 +136,7 @@ export class ManualDriver {
   private running: { handle: unknown; sent: number; count: number } | null = null;
 
   constructor(
-    private readonly sockets: InputSockets,
+    private readonly sockets: InputSockets & MarketControl,
     private readonly print: (line: string) => void,
     private readonly timers: Timers = REAL_TIMERS,
     private readonly now: () => string = () => new Date().toISOString()
@@ -131,6 +155,21 @@ export class ManualDriver {
         return this.printPeers();
       case 'stop':
         return this.stop();
+      case 'pause':
+        this.sockets.pause();
+        return this.print('market paused: nothing is generated until /resume');
+      case 'resume':
+        this.sockets.resume();
+        return this.print('market resumed');
+      case 'jump': {
+        const subscribed = this.sockets.jump(command.symbol, command.percent);
+        const move = `${command.symbol} moves ${command.percent}% on its next trade`;
+        return this.print(
+          subscribed === 0
+            ? `${move}, once a socket subscribes to its trades`
+            : `${move} (${subscribed} socket(s) subscribed)`
+        );
+      }
       case 'send': {
         const recipients = this.sockets.broadcast(command.message);
         return this.print(`sent to ${recipients} socket(s)`);

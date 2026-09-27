@@ -20,3 +20,15 @@ export interface InputSockets {
   /** Every socket currently connected, input and output alike. */
   connected(): ConnectedSocket[];
 }
+
+/** The generated market, as a driver steers it. */
+export interface MarketControl {
+  /** Stop every generator tick until {@link resume}. Manual input still sends. */
+  pause(): void;
+  resume(): void;
+  /**
+   * Move `symbol`'s traded price by `percent` on its next tick, and answer
+   * how many sockets are subscribed to its trades.
+   */
+  jump(symbol: string, percent: number): number;
+}

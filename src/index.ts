@@ -8,7 +8,7 @@ const generatorsPath = process.env.GENERATORS_PATH || './generators';
 const websocket = new WebsocketServer(
   parseInt(process.env.FLEZHA_TESTNET_WS_PORT || '4500'),
   generatorsPath,
-  process.env.FLEZHA_TESTNET_CONFIG
+  process.env.FLEZHA_TESTNET_CONFIG || 'testnet-config.json'
 );
 
 const servers: [ServerContract] = [websocket];

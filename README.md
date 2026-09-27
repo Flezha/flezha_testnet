@@ -133,7 +133,7 @@ which carries its own intervals and generator config, unchanged.
 | --- | --- |
 | `FLEZHA_TESTNET_WS_PORT` | Listen port (default `4500`) |
 | `GENERATORS_PATH` | Directory of generator modules (default `./generators`) |
-| `FLEZHA_TESTNET_CONFIG` | JSON file mapping Kraken channels to generators, plus per-symbol tuning |
+| `FLEZHA_TESTNET_CONFIG` | JSON file mapping Kraken channels to generators, plus per-symbol tuning (default `testnet-config.json`) |
 | `FLEZHA_TESTNET_MANUAL` | `1` forces manual input on, `0` off; unset follows whether stdin is a terminal |
 
 A v2 subscribe carries no room for a base price or a tick interval, so that

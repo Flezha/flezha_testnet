@@ -116,7 +116,7 @@ export default class ServerImpl implements ServerContract, InputSockets, MarketC
     const raw = message.toString();
     const connection = this.connections.get(ws);
 
-    // An output socket is a sink reporting what an operator emitted: print it
+    // An output socket is a sink reporting what a relay emitted: print it
     // and stop. Before the router, so a payload that happens to look like a
     // subscription frame cannot start generators on the sink's own socket.
     if (connection?.role === 'output') {

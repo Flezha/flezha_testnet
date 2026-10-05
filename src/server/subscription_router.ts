@@ -3,7 +3,7 @@
  * asked for on which channel, and the generator timer serving each one.
  *
  * One router per connection is what makes the testnet usable by a partitioned
- * operator: each member subscribes only the symbols in its own key-group
+ * relay: each member subscribes only the symbols in its own key-group
  * range, and must then receive only those. A server that generated for every
  * configured symbol would hand every member the whole set, and the partition
  * guard would park the out-of-range half.

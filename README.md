@@ -3,7 +3,7 @@
 A fake exchange for [Flezha](https://github.com/flezha/flezha). It speaks a
 WebSocket v2 exchange protocol, streams generated trades and order books for any
 symbol you subscribe to, and prints what a Flezha sink sends back. Flezha's own
-tests use it, and so do its guides, so an operator can be watched working on
+tests use it, and so do its guides, so a relay can be watched working on
 market data without an exchange account.
 
 ## Run it with Docker
@@ -41,8 +41,8 @@ npm run start
 
 Run the testnet in a terminal and it reads typed lines, sending each one to
 every connected socket. This is the hand-driven half of an end-to-end test: the
-`operator_websocket` source connects to the testnet as a client, so what you
-type here is what the operator ingests.
+`relay_websocket` source connects to the testnet as a client, so what you
+type here is what the relay ingests.
 
 ```
 $ npm run start
@@ -65,10 +65,10 @@ bulk: 500 message(s), one every 60ms
 | `/jump <symbol> <percent>` | send one market trade for `<symbol>` at `<percent>` away from its price; the price then carries on from where it was |
 | `/help` | the command list |
 
-`/pause` and `/resume` let a guide freeze the feed while it compares an
-operator's state before and after a crash. A jump goes through the generator
+`/pause` and `/resume` let a guide freeze the feed while it compares a
+relay's state before and after a crash. A jump goes through the generator
 and the subscription like any other trade, so only the sockets subscribed to
-that symbol see it, and a partitioned operator receives it on the one member
+that symbol see it, and a partitioned relay receives it on the one member
 that owns the symbol. It is a single spike rather than a new level, so it
 triggers a rule once instead of on every trade after it.
 
@@ -91,8 +91,8 @@ stdin is the shutdown channel there, not a keyboard. Force it either way with
 
 ## Output
 
-A socket connecting on `/out` is treated as a Flezha sink reporting what an
-operator emitted. Its frames are printed verbatim and nothing is sent back: no
+A socket connecting on `/out` is treated as a Flezha sink reporting what a
+relay emitted. Its frames are printed verbatim and nothing is sent back: no
 acks, no generators, and none of the manual input above. That is what lets one
 testnet process be both ends of a hand-driven run.
 
@@ -102,7 +102,7 @@ out < {"total":3}
 ```
 
 What arrives is whatever the websocket sink was configured to send. With no
-`sink_template` the operator's payload goes out on its own, which is the line
+`sink_template` the relay's payload goes out on its own, which is the line
 above. A template composes the frame instead: `{{payload}}` is required, and
 `{{req_id}}`, `{{cell}}` and `{{seq}}` are available.
 
@@ -110,7 +110,7 @@ A websocket text frame has no header slot, so a template is the only way the
 identity stamps reach the other end. To see them here, give the sink one:
 
 ```
---plugins '[{"id":"out","provider":"operator_websocket","opts":{
+--plugins '[{"id":"out","provider":"relay_websocket","opts":{
   "uri":"ws://localhost:4500/out",
   "sink_template":"{\"payload\":{{payload}},\"cell\":\"{{cell}}\",\"seq\":{{seq}}}"
 },"hooks":[["on_output",{}]]}]'
@@ -124,7 +124,7 @@ out < {"payload":{"total":3},"cell":"order-7","seq":41}
 
 The server speaks two subscription dialects on the same socket.
 
-**v2** — what the `operator_websocket` subscription source sends:
+**v2** — what the `relay_websocket` subscription source sends:
 
 ```json
 {"method":"subscribe","params":{"channel":"trade","symbol":["BTC/DEMO1"]},"req_id":7}
@@ -132,7 +132,7 @@ The server speaks two subscription dialects on the same socket.
 
 Each request is acked once per symbol, echoing its `req_id` (the source commits
 its applied set on that echo). Generators run **per connection per symbol**, so
-a partitioned operator's members each receive only what they subscribed.
+a partitioned relay's members each receive only what they subscribed.
 
 **Legacy** — `{"event_type":"subscribe","event_data":{"generators":[…]}}`,
 which carries its own intervals and generator config, unchanged.

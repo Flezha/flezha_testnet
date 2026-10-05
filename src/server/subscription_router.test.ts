@@ -181,7 +181,7 @@ test('an unknown channel starts nothing and is not acked', () => {
 const SUBSCRIBE_BTC = '{"method":"subscribe","params":{"channel":"trade","symbol":["BTC/DEMO1"]},"req_id":1}';
 
 // fails when: /pause stops nothing, so a guide cannot freeze the feed to
-// compare an operator's state before and after a crash.
+// compare a relay's state before and after a crash.
 test('a paused market generates nothing, and resumes on the next tick', () => {
   const market = new Market();
   market.pause();

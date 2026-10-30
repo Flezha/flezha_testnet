@@ -1,11 +1,11 @@
-FROM node:22-bookworm-slim AS build
+FROM node:26.13.0-bookworm-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json tsconfig.json ./
 RUN npm ci --no-audit --no-fund
 COPY src ./src
 RUN npm run build
 
-FROM node:22-bookworm-slim
+FROM node:26.13.0-bookworm-slim
 RUN apt-get update \
     && apt-get install -y --no-install-recommends tini \
     && rm -rf /var/lib/apt/lists/*

@@ -11,8 +11,8 @@
   "author": "Anuar Alfetahe",
   "license": "MPL-2.0",
   "dependencies": {
-    "@types/ws": "^8.5.13",
-    "typescript": "^5.7.2",
-    "ws": "^8.18.0"
+    "@types/ws": "^8.18.2",
+    "typescript": "^7.0.2",
+    "ws": "^8.22.0"
   }
 }
